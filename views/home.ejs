@@ -3,6 +3,10 @@
 <p><%= startingContent %></p>
 <% posts.forEach(post => { %>
     <h1><%= post.title %></h1>
-    <p><%= post.content %></p>
+    <% var title = post.title %> 
+    <% var fullContent = post.content %>
+    <% var truncatedString = fullContent.substring(0,100)+"..."%>
+    <% var readLink = "/posts/"+title %>   
+    <p><%= truncatedString %> <a href="<%= readLink %>">Read More</a> </p>
     <% }); %>
 <%- include("partials/footer") -%>
