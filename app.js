@@ -12,17 +12,16 @@ const aboutContent = "Hac habitasse platea dictumst vestibulum rhoncus est pelle
 const contactContent = "Scelerisque eleifend donec pretium vulputate sapien. Rhoncus urna neque viverra justo nec ultrices. Arcu dui vivamus arcu felis bibendum. Consectetur adipiscing elit duis tristique. Risus viverra adipiscing at in tellus integer feugiat. Sapien nec sagittis aliquam malesuada bibendum arcu vitae. Consequat interdum varius sit amet mattis. Iaculis nunc sed augue lacus. Interdum posuere lorem ipsum dolor sit amet consectetur adipiscing elit. Pulvinar elementum integer enim neque. Ultrices gravida dictum fusce ut placerat orci nulla. Mauris in aliquam sem fringilla ut morbi tincidunt. Tortor posuere ac ut consequat semper viverra nam libero.";
 
 const app = express();
-var posts = [];
 app.set('view engine', 'ejs');
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
 //connecting or creating of database to server
-// mongoose.connect("mongodb+srv://admin-eshan:Test123@cluster0.l312f.mongodb.net/BlogsDB", { useNewUrlParser: true });
+mongoose.connect("mongodb+srv://admin-eshan:Test123@cluster0.l312f.mongodb.net/BlogsDB", { useNewUrlParser: true });
 
 // connecting or creating of database to local server
-mongoose.connect("mongodb://localhost:27017/BlogsDB");
+// mongoose.connect("mongodb://localhost:27017/BlogsDB");
 
 var blogPostSchema = {
   title: String,
@@ -37,7 +36,6 @@ app.get("/", function (req, res) {
       console.log(err);
     } else {
       console.log("Successfully found Items!!!");
-      console.log(foundPosts);
       res.render("home", {
         startingContent: homeStartingContent,
         posts: foundPosts
@@ -55,9 +53,47 @@ app.get("/contact", function (req, res) {
 });
 
 
-app.get("/compose"+process.env.COMPOSE_PASSWORD, function (req, res) {
-  res.render("compose");
+////////////////////Route to compose Blog Posts/////////////////////
+
+app.route("/compose"+process.env.COMPOSE_PASSWORD)
+.get(function (req, res) {
+  res.render("compose",{password:"/compose"+process.env.COMPOSE_PASSWORD});
+})
+.post(function (req, res) {
+  var blogPost1 = new blogPost({
+    title: req.body.postTitle,
+    content: req.body.postBody
+  });
+  blogPost1.save(function (err) {
+    if (!err) {
+      console.log("Successfully added blog post to DB");
+      res.redirect("/");
+    }
+  });
 });
+
+
+////////////////////Route to delete Blog Posts/////////////////////
+
+app.route("/delete"+process.env.COMPOSE_PASSWORD)
+.get(function (req, res) {
+  res.render("delete",{password:"/delete"+process.env.COMPOSE_PASSWORD});
+})
+.post(function (req, res) {
+  var requestedTitle = req.body.postTitle;
+  blogPost.deleteOne({title:requestedTitle},function (err) {
+    if(!err){
+      console.log("Deleted item successfully!");
+      res.redirect("/");
+    }else{
+      console.log("Error is as follows-:");
+      console.log(err);
+      res.redirect("/delete"+process.env.COMPOSE_PASSWORD);
+    }
+  });
+});
+
+////////////////////Route to read Blog Posts/////////////////////
 
 app.get("/posts/:postId", function (req, res) {
   const requestedId = req.params.postId;
@@ -70,24 +106,6 @@ app.get("/posts/:postId", function (req, res) {
   });
 });
 
-app.post("/compose", function (req, res) {
-  const post = {
-    title: req.body.postTitle,
-    content: req.body.postBody
-  };
-  posts.push(post);
-
-  var blogPost1 = new blogPost({
-    title: req.body.postTitle,
-    content: req.body.postBody
-  });
-  blogPost1.save(function (err) {
-    if (!err) {
-      console.log("Successfully added blog post to DB");
-      res.redirect("/");
-    }
-  });
-});
 
 let port = process.env.PORT;
 if(port == null || port == ""){
